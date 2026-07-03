@@ -1,4 +1,4 @@
-# RAG Chatbot & Quiz Generator
+# EduRAG
 A fully local Retrieval-Augmented Generation (RAG) chatbot and automatic quiz generator with no telemetry and usage costs
 
 <img src="https://img.shields.io/badge/License-MIT-green"></img>
