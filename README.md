@@ -1,4 +1,4 @@
-# RAG Chatbot & Quiz Generator
+# EduRAG
 A fully local Retrieval-Augmented Generation (RAG) chatbot and automatic quiz generator with no telemetry and usage costs
 
 <img src="https://img.shields.io/badge/License-MIT-green"></img>
@@ -6,6 +6,10 @@ A fully local Retrieval-Augmented Generation (RAG) chatbot and automatic quiz ge
 <img src="https://img.shields.io/badge/Spring%20Boot-6DB33F?logo=springboot&logoColor=black"></img>
 <img src="https://img.shields.io/badge/Spring%20AI-6DB33F?logo=spring&logoColor=black"></img>
 <img src="https://img.shields.io/badge/Powered%20by-Ollama-black?logo=ollama"></img>
+
+<img width="1727" height="909" alt="Captura de pantalla 2026-10-10 a las 17 10 03" src="https://github.com/user-attachments/assets/f35628bb-d88e-4ea2-b2b8-b884391449c1" />
+<img width="1727" height="909" alt="Captura de pantalla 2026-10-10 a las 17 07 27" src="https://github.com/user-attachments/assets/5c7041fe-08e5-48a4-8a93-0f39a3202a20" />
+
 
 ## ✨ Features
 - Conversational chatbot with contextual memory powered by your own documents
