@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.0</version>
+        <version>4.1.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.rubenzu03</groupId>
     <artifactId>RAG_chatbot</artifactId>
-    <version>2.0.0</version>
+    <version>2.1.0</version>
     <name>RAG_chatbot</name>
     <description>RAG_chatbot</description>
     <url/>
@@ -27,10 +27,17 @@
         <url/>
     </scm>
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
         <protobuf.version>4.34.1</protobuf.version>
         <lang3.version>3.20.0</lang3.version>
-        <okio.version>3.16.4</okio.version>
+        <jackson-bom.version>3.2.3</jackson-bom.version>
+        <tomcat.version>11.0.26</tomcat.version>
+        <bouncycastle.version>1.86</bouncycastle.version>
+        <jacoco.version>0.8.15</jacoco.version>
+        <logback.version>1.6.3</logback.version>
+        <snappy.version>1.1.10.9</snappy.version>
+        <netty.version>4.2.19.Final</netty.version>
+        <postgresql.version>42.7.14</postgresql.version>
     </properties>
     <dependencies>
         <dependency>
@@ -53,22 +60,21 @@
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-security</artifactId>
-        <version>4.0.5</version>
       </dependency>
       <dependency>
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-api</artifactId>
-        <version>0.12.6</version>
+        <version>0.13.0</version>
       </dependency>
       <dependency>
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-impl</artifactId>
-        <version>0.12.6</version>
+        <version>0.13.0</version>
       </dependency>
       <dependency>
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-jackson</artifactId>
-        <version>0.12.6</version>
+        <version>0.13.0</version>
         <scope>runtime</scope>
       </dependency>
       <dependency>
@@ -119,23 +125,16 @@
         <artifactId>spring-boot-starter-jdbc</artifactId>
       </dependency>
         <dependency>
-            <groupId>com.squareup.okio</groupId>
-            <artifactId>okio</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.minio</groupId>
             <artifactId>minio</artifactId>
             <version>9.0.3</version>
         </dependency>
+<!-- okhttp 5.x is a multiplatform artifact with no JVM classes; minio pulls it
+     transitively, so the okhttp dependency must be declared as okhttp-jvm. -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>4.11.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>2.21.2</version>
+            <artifactId>okhttp-jvm</artifactId>
+            <version>5.3.2</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.ai</groupId>
@@ -157,21 +156,21 @@
             <dependency>
                 <groupId>com.fasterxml.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>
-                <version>2.21.1</version>
+                <version>2.22.3</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework.ai</groupId>
                 <artifactId>spring-ai-bom</artifactId>
-                <version>2.0.0</version>
+                <version>2.0.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>io.grpc</groupId>
                 <artifactId>grpc-netty-shaded</artifactId>
-                <version>1.80.0</version>
+                <version>1.84.1</version>
             </dependency>
             <dependency>
                 <groupId>com.google.protobuf</groupId>
@@ -183,28 +182,53 @@
                 <artifactId>commons-lang3</artifactId>
                 <version>${lang3.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.squareup.okio</groupId>
-                <artifactId>okio</artifactId>
-                <version>${okio.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-core</artifactId>
-                <version>1.5.25</version>
-            </dependency>
-          <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.5.25</version>
-          </dependency>
+
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
                 <version>3.27.7</version>
             </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.xerial.snappy</groupId>
+                <artifactId>snappy-java</artifactId>
+                <version>${snappy.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <profiles>
+        <!--
+          reactor-netty declares netty-resolver-dns-native-macos with a hardcoded
+          osx-x86_64 classifier, so Apple Silicon Macs fail to load the DNS native
+          library ("UnsatisfiedLinkError" / MacOSDnsServerAddressStreamProvider warning).
+          Add the aarch_64 build of the same artifact on arm64 Macs. Both variants can
+          coexist: Netty picks the one matching the current architecture at runtime.
+          Only active on macOS/aarch64, so Linux/Docker builds are unaffected.
+        -->
+        <profile>
+            <id>macos-aarch64-netty-dns</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>aarch64</arch>
+                </os>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-resolver-dns-native-macos</artifactId>
+                    <version>${netty.version}</version>
+                    <classifier>osx-aarch_64</classifier>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
     <build>
         <plugins>
@@ -227,7 +251,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version>
+                <version>${jacoco.version}</version>
                 <executions>
                     <execution>
                         <goals>

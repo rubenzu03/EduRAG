@@ -1,2 +1,4 @@
 ignoredBuiltDependencies:
   - esbuild
+minimumReleaseAgeExclude:
+  - '@types/node@26.6.5'
