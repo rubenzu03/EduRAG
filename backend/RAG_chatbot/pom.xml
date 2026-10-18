@@ -28,7 +28,7 @@
     </scm>
     <properties>
         <java.version>25</java.version>
-        <protobuf.version>4.34.1</protobuf.version>
+        <protobuf.version>4.36.2</protobuf.version>
         <lang3.version>3.20.0</lang3.version>
         <jackson-bom.version>3.2.3</jackson-bom.version>
         <tomcat.version>11.0.26</tomcat.version>
